@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PlantID · Backend</title>
+    <style>
+      :root {
+        --green: #4caf50;
+        --gray: #f5f5f5;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica,
+          Arial, sans-serif;
+      }
+      body {
+        background: var(--gray);
+        color: #333;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        padding: 1rem;
+      }
+      main {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+        padding: 2rem 3rem;
+        max-width: 600px;
+        width: 100%;
+        text-align: center;
+      }
+      h1 {
+        color: var(--green);
+        margin-bottom: 1rem;
+        font-size: 2rem;
+      }
+      ul {
+        margin: 1.5rem 0;
+        text-align: left;
+        line-height: 1.6;
+      }
+      code {
+        background: #e8e8e8;
+        border-radius: 4px;
+        padding: 2px 6px;
+        font-size: 0.9rem;
+      }
+      a {
+        color: var(--green);
+        text-decoration: none;
+        font-weight: 600;
+      }
+      footer {
+        margin-top: 2rem;
+        font-size: 0.85rem;
+        color: #555;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>PlantID Backend 🚀</h1>
+      <p>
+        ¡Enhorabuena! Tu servidor Express + TypeScript está funcionando.<br />
+        Usa los siguientes endpoints para comenzar a interactuar con la API:
+      </p>
+      <ul>
+        <li>
+          <code>GET /health</code> – Comprobación rápida del estado del servidor
+        </li>
+        <li>
+          <code>POST /api/identify</code> – Identificar una planta por imagen
+        </li>
+        <li><code>GET /api/plants?q=&lt;nombre&gt;</code> – Buscar plantas</li>
+        <li>
+          <code>GET /api/families</code> – Listado de familias en base local
+        </li>
+        <li><code>POST /api/chat</code> – Chatbot Plant.ID</li>
+        <li><code>GET /api/stats</code> – Estadísticas de la clave de API</li>
+      </ul>
+      <p>
+        ¿Quieres ver el estado? Dirígete a
+        <a href="/health" target="_blank" rel="noopener">/health</a>.
+      </p>
+      <footer>
+        PlantID · Backend template –
+        <a href="https://plant.id/" target="_blank" rel="noopener"
+          >Plant.id API</a
+        >
+      </footer>
+    </main>
+  </body>
+</html>
