@@ -94,7 +94,8 @@ export class IdentificacionRepositoryImpl implements IdentificacionRepository {
         await prisma.imagenPlanta.create({
             data: {
                 plantaId: planta.id,
-                url: path.relative(path.join(process.cwd(), 'public'), rutaDestino).replace(/\\/g, '/'),
+                url: path.relative(path.join(process.cwd(), 'public'), rutaDestino)
+                    .replace(/\\/g, '/'),
                 miniatura: false,
             },
         });

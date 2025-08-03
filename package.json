@@ -4,7 +4,7 @@
   "description": "Aca sera alojado todo el backend para la contruccion consumo y edicion de las apis",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon --watch src --exec \"ts-node src/app.ts\"",
+    "dev": "nodemon --watch src --watch .env --ext ts,js,json,env --exec \"ts-node src/app.ts\"",
     "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
