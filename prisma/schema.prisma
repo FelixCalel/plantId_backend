@@ -1,9 +1,111 @@
-generator client {
-  provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
+generator cliente {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url      = env("POSTGRES_URL")
+}
+
+enum EstadoPlanta {
+  ACTIVA
+  INACTIVA
+}
+
+enum RolChat {
+  USUARIO
+  BOT
+}
+
+model Familia {
+  id            Int         @id @default(autoincrement())
+  nombre        String      @unique
+  descripcion   String?
+  estado        Boolean     @default(true)
+  plantas       Planta[]
+  taxonomias    Taxonomia[]
+  creadoEn      DateTime    @default(now())
+  actualizadoEn DateTime    @updatedAt
+}
+
+model Taxonomia {
+  id        Int      @id @default(autoincrement())
+  reino     String?
+  filo      String?
+  clase     String?
+  orden     String?
+  genero    String?
+  especie   String?
+  rango     String?
+  familiaId Int
+  familia   Familia  @relation(fields: [familiaId], references: [id])
+  plantas   Planta[]
+
+  @@unique([familiaId, genero, especie])
+}
+
+model Planta {
+  id               Int              @id @default(autoincrement())
+  nombreCientifico String
+  nombresComunes   String[]
+  estado           EstadoPlanta     @default(ACTIVA)
+  taxonomiaId      Int
+  taxonomia        Taxonomia        @relation(fields: [taxonomiaId], references: [id])
+  familiaId        Int?
+  familia          Familia?         @relation(fields: [familiaId], references: [id])
+  imagenes         ImagenPlanta[]
+  identificaciones Identificacion[]
+  creadoEn         DateTime         @default(now())
+  actualizadoEn    DateTime         @updatedAt
+
+  @@index([nombreCientifico])
+}
+
+model ImagenPlanta {
+  id        Int     @id @default(autoincrement())
+  plantaId  Int
+  url       String
+  miniatura Boolean @default(false)
+  planta    Planta  @relation(fields: [plantaId], references: [id])
+
+  @@index([plantaId])
+}
+
+model Identificacion {
+  id           Int      @id @default(autoincrement())
+  plantaId     Int?
+  imagenBase64 String
+  respuestaApi Json
+  confianza    Float?
+  creadaEn     DateTime @default(now())
+  planta       Planta?  @relation(fields: [plantaId], references: [id])
+}
+
+model ConversacionChat {
+  id             Int           @id @default(autoincrement())
+  creadaEn       DateTime      @default(now())
+  mensajes       MensajeChat[]
+  creditosUsados Int           @default(0)
+}
+
+model MensajeChat {
+  id             Int              @id @default(autoincrement())
+  conversacionId Int
+  rol            RolChat
+  contenido      String
+  creadoEn       DateTime         @default(now())
+  conversacion   ConversacionChat @relation(fields: [conversacionId], references: [id])
+
+  @@index([conversacionId])
+}
+
+model UsoApi {
+  id                Int      @id @default(autoincrement())
+  fecha             DateTime @unique
+  estatus           String
+  limiteCreditos    Int
+  creditosUsados    Int
+  creditosRestantes Int
+  creadoEn          DateTime @default(now())
 }

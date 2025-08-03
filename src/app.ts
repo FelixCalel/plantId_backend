@@ -1,5 +1,5 @@
 import { envs } from './config/envs';
-import { AppRoutes } from './routes';
+import { AppRouter } from './routes';
 import { Server } from './server';
 
 
@@ -8,7 +8,7 @@ import { Server } from './server';
         port: envs.PORT,
         host: envs.HOST,
         public_path: envs.PUBLIC_PATH,
-        routes: AppRoutes.routers,
+        routes: AppRouter.routes,
     });
 
     await server.start();

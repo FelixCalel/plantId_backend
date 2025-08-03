@@ -1,13 +1,15 @@
 import { Router } from 'express';
+import { FamiliaRoutes } from './presentation/familia/familia.routes';
+import { TaxonomiaRoutes } from './presentation/Taxonomia/taxonomia.routes';
+import { PlantaRoutes } from './presentation/Planta/planta.routes';
 
-export class AppRoutes {
-    static get routers(): Router {
+export class AppRouter {
+    static get routes(): Router {
         const router = Router();
-        router.get('/identify', (_req, res) => res.sendStatus(501));
-        router.get('/plants', (_req, res) => res.sendStatus(501));
-        router.get('/families', (_req, res) => res.sendStatus(501));
-        router.get('/chat', (_req, res) => res.sendStatus(501));
-        router.get('/stats', (_req, res) => res.sendStatus(501));
+
+        router.use('/familias', FamiliaRoutes.routes);
+        router.use('/taxonomias', TaxonomiaRoutes.routes);
+        router.use('/plantas', PlantaRoutes.routes);
 
         return router;
     }
