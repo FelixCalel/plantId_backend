@@ -6,7 +6,6 @@ import { envs } from '../../config/envs';
 import { logger } from '../../config/logger';
 import { CustomError } from '../../domain/error/custom.error';
 
-/* ---------- Tipos basados en Plant.id v2 ---------- */
 export interface PlantIdSuggestion {
     id: number;
     plant_name: string;
@@ -43,7 +42,7 @@ export class PlantIdApiService {
 
     constructor(
         private readonly apiKey = envs.PLANTID_API_KEY,
-        private readonly baseUrl = envs.PLANTID_BASE_URL, // https://plant.id/api/v2
+        private readonly baseUrl = envs.PLANTID_BASE_URL,
     ) {
         this.http = axios.create({
             baseURL: this.baseUrl.replace(/\/+$/, ''),
@@ -55,22 +54,16 @@ export class PlantIdApiService {
         });
     }
 
-    /** Envía la imagen a v2/identify y devuelve el resultado */
     async identify(localImagePath: string): Promise<IdentifyResponse> {
         try {
-            // 1. Lee y convierte la imagen a Base64
             const bytes = await fs.readFile(path.resolve(localImagePath));
             const base64Img = bytes.toString('base64');
-
-            // 2. Payload v2
             const payload = {
-                images: [base64Img],                                      // obligatorio
-                modifiers: ['crops_fast', 'similar_images'],              // opcional
-                plant_language: 'es',                                     // idioma de las descripciones
+                images: [base64Img],
+                modifiers: ['crops_fast', 'similar_images'],
+                plant_language: 'es',
                 plant_details: ['common_names', 'url', 'wiki_description', 'taxonomy'],
             };
-
-            // 3. POST /identify
             const { data } = await this.http.post<IdentifyResponse>('/identify', payload);
 
             if (data.error) {
@@ -83,7 +76,6 @@ export class PlantIdApiService {
         }
     }
 
-    /** Consulta créditos restantes en v2/usage */
     async getUsage(): Promise<UsageResponse> {
         try {
             const { data } = await this.http.get<UsageResponse>('/usage');
@@ -93,7 +85,6 @@ export class PlantIdApiService {
         }
     }
 
-    /** Manejo unificado de errores Axios */
     private handleAxiosError<T>(err: unknown): never {
         if (axios.isAxiosError(err)) {
             const ax = err as AxiosError<any>;

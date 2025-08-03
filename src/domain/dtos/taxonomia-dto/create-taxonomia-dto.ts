@@ -1,4 +1,3 @@
-// domain/dtos/taxonomia/crear-taxonomia.dto.ts
 export class CrearTaxonomiaDto {
     private constructor(
         public readonly familiaId: number,

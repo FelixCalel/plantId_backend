@@ -17,18 +17,12 @@ const controller = new IdentificacionController(repository, plantIdApi);
 export class IdentificacionRoutes {
     static get routes(): Router {
         const router = Router();
-
-        //  POST /identificaciones  → crear e identificar
         router.post(
             '/',
             upload.single('image'),
             controller.identify,
         );
-
-        //  GET /identificaciones/:id
         router.get('/:id', controller.getById);
-
-        //  GET /identificaciones?page=1&limit=10
         router.get('/', controller.paginate);
 
         return router;
