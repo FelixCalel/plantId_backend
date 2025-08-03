@@ -4,6 +4,7 @@ export class CrearPlantaDto {
     public readonly taxonomiaId: number,
     public readonly nombresComunes: string[] = [],
     public readonly familiaId?: number,
+    public readonly imagenUrl?: string,
   ) { }
 
   static crear(obj: any): [string?, CrearPlantaDto?] {
@@ -17,6 +18,7 @@ export class CrearPlantaDto {
         Number(obj.taxonomiaId),
         Array.isArray(obj.nombresComunes) ? obj.nombresComunes : [],
         obj.familiaId ? Number(obj.familiaId) : undefined,
+        typeof obj.imagenUrl === 'string' ? obj.imagenUrl : undefined,
       ),
     ];
   }

@@ -8,6 +8,36 @@ import { Planta } from '../../domain/entities/plant.entity';
 import { CustomError } from '../../domain/error/custom.error';
 
 
+export interface PlantaConImagenes {
+    id: number;
+    nombreCientifico: string;
+    nombresComunes: string[];
+    estado: 'ACTIVA' | 'INACTIVA';
+    taxonomiaId: number;
+    familiaId: number;
+    creadoEn: Date;
+    actualizadoEn: Date;
+    imagenes: string[];
+    /** ↪︎ Agrégalo: */
+    taxonomia: {
+        id: number;
+        reino: string | null;
+        filo: string | null;
+        clase: string | null;
+        orden: string | null;
+        genero: string | null;
+        especie: string | null;
+        rango: string | null;
+        /** Y dentro, su familia: */
+        familia: {
+            id: number;
+            nombre: string;
+            descripcion: string | null;
+            estado: boolean;
+        }
+    };
+}
+
 export class PlantaDataSourceImpl implements PlantaDatasource {
 
     async create(dto: CrearPlantaDto): Promise<Planta> {
@@ -28,21 +58,56 @@ export class PlantaDataSourceImpl implements PlantaDatasource {
         return Planta.fromPrisma(creada);
     }
 
-    async getAll(q = '', page = 1, estado?: 'ACTIVA' | 'INACTIVA'): Promise<Planta[]> {
+    async getAll(
+        q = '',
+        page = 1,
+        estado?: 'ACTIVA' | 'INACTIVA'
+    ): Promise<PlantaConImagenes[]> {
         const plantas = await prisma.planta.findMany({
             where: {
                 nombreCientifico: { contains: q, mode: 'insensitive' },
-                ...(estado ? { estado } : {})
+                ...(estado ? { estado } : {}),
             },
             include: {
-                imagenes: { where: { miniatura: true } },
-                taxonomia: { include: { familia: true } }
+                imagenes: true,
+                taxonomia: {
+                    include: { familia: true }
+                }
             },
             skip: (page - 1) * 25,
             take: 25,
             orderBy: { nombreCientifico: 'asc' },
         });
-        return plantas.map(Planta.fromPrisma);
+
+        return plantas.map(p => ({
+            id: p.id,
+            nombreCientifico: p.nombreCientifico,
+            nombresComunes: p.nombresComunes,
+            estado: p.estado,
+            taxonomiaId: p.taxonomiaId,
+            familiaId: p.familiaId!,
+            creadoEn: p.creadoEn,
+            actualizadoEn: p.actualizadoEn,
+            imagenes: p.imagenes.map(img => img.url),
+
+            /* ↪︎ Aquí mapeas la taxonomía tal cual la incluiste: */
+            taxonomia: {
+                id: p.taxonomia.id,
+                reino: p.taxonomia.reino,
+                filo: p.taxonomia.filo,
+                clase: p.taxonomia.clase,
+                orden: p.taxonomia.orden,
+                genero: p.taxonomia.genero,
+                especie: p.taxonomia.especie,
+                rango: p.taxonomia.rango,
+                familia: {
+                    id: p.taxonomia.familia.id,
+                    nombre: p.taxonomia.familia.nombre,
+                    descripcion: p.taxonomia.familia.descripcion,
+                    estado: p.taxonomia.familia.estado,
+                }
+            }
+        }));
     }
 
     async update(dto: ActualizarPlantaDto): Promise<Planta> {

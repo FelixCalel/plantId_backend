@@ -8,16 +8,17 @@ export class ActualizarPlantaDto {
     ) { }
 
     static crear(obj: any): [string?, ActualizarPlantaDto?] {
-        if (!obj.id) return ['El id es obligatorio'];
-
+        if (!obj.id) {
+            return ['El id es obligatorio'];
+        }
         return [
             undefined,
             new ActualizarPlantaDto(
                 Number(obj.id),
                 obj.nombreCientifico,
                 Array.isArray(obj.nombresComunes) ? obj.nombresComunes : undefined,
-                obj.taxonomiaId ? Number(obj.taxonomiaId) : undefined,
-                obj.familiaId ? Number(obj.familiaId) : undefined,
+                obj.taxonomiaId != null ? Number(obj.taxonomiaId) : undefined,
+                obj.familiaId != null ? Number(obj.familiaId) : undefined,
             ),
         ];
     }
