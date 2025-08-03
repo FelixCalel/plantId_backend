@@ -39,10 +39,7 @@ export class PlantaController {
         };
 
         try {
-            // 1) Conteo total (sin paginar)
             const total = await prisma.planta.count({ where });
-
-            // 2) Items de esta página (con imágenes, taxonomía, familia…)
             const items = await prisma.planta.findMany({
                 where,
                 skip: (pagina - 1) * 25,
@@ -54,7 +51,6 @@ export class PlantaController {
                 },
             });
 
-            // 3) Devuelvo ambos:
             return res.json({ items, total });
         } catch (e) {
             return this.handleError(e, res);

@@ -1,4 +1,3 @@
-// taxonomy.entity.ts
 export class Taxonomia {
     constructor(
         public readonly id: number,

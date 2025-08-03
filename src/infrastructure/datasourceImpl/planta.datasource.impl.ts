@@ -89,8 +89,6 @@ export class PlantaDataSourceImpl implements PlantaDatasource {
             creadoEn: p.creadoEn,
             actualizadoEn: p.actualizadoEn,
             imagenes: p.imagenes.map(img => img.url),
-
-            /* ↪︎ Aquí mapeas la taxonomía tal cual la incluiste: */
             taxonomia: {
                 id: p.taxonomia.id,
                 reino: p.taxonomia.reino,
