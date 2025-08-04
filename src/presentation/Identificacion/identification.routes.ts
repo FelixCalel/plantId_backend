@@ -1,4 +1,3 @@
-// src/presentation/Identificacion/identificacion.routes.ts
 import { Router } from 'express';
 import multer from 'multer';
 import { PlantIdApiService } from '../../infrastructure/external/plantid-api.service';
@@ -8,7 +7,7 @@ import { IdentificacionController } from './identification.controller';
 
 const upload = multer({ dest: 'uploads/' });
 
-/* Dependencias */
+
 const datasource = new IdentificacionDataSourceImpl();
 const repository = new IdentificacionRepositoryImpl();
 const plantIdApi = new PlantIdApiService();

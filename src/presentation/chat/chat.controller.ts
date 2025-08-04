@@ -9,7 +9,7 @@ const plantApi = new PlantIdApiService();
 const chatService = new ChatService(chatRepo, plantApi);
 
 export class ChatController {
-    /** POST /conversaciones */
+
     start = async (req: Request, res: Response) => {
         const { identificationId, secret } = req.body;
         try {
@@ -20,7 +20,7 @@ export class ChatController {
         }
     };
 
-    /** POST /conversaciones/:id/mensajes */
+
     send = async (req: Request, res: Response) => {
         const dto = new CreateMessageDto();
         dto.conversacionId = Number(req.params.id);
@@ -33,7 +33,7 @@ export class ChatController {
         }
     };
 
-    /** GET /conversaciones/:id */
+
     get = async (req: Request, res: Response) => {
         const id = Number(req.params.id);
         try {
@@ -45,7 +45,7 @@ export class ChatController {
         }
     };
 
-    /** GET /conversaciones/:id/historial?page=1&limit=25 */
+
     history = async (req: Request, res: Response) => {
         const id = Number(req.params.id);
         const page = Number(req.query.page ?? 1);

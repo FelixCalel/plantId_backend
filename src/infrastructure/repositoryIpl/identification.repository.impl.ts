@@ -1,5 +1,3 @@
-// src/infrastructure/repositoryIpl/identification.repository.impl.ts
-
 import path from 'path';
 import fs from 'fs/promises';
 import { prisma } from '../../config/database';
@@ -14,25 +12,24 @@ import { Identificacion } from '../../domain/entities/identification.entity';
 import { IdentificacionRepository } from '../../domain/repositories/identification.repository';
 
 function todasLasSugerencias(res: IdentifyResponse): PlantIdSuggestion[] {
-    // V3
+
     if (res.result?.classification?.suggestions?.length) {
         return res.result.classification.suggestions;
     }
-    // V2
+
     if ((res as any).suggestions?.length) {
         return (res as any).suggestions;
     }
     return [];
 }
 
-/** Saca la mejor sugerencia de identificación */
 function mejorSugerencia(res: IdentifyResponse): PlantIdSuggestion | null {
     const sugerencias = todasLasSugerencias(res);
     if (!sugerencias.length) return null;
     return [...sugerencias].sort((a, b) => b.probability - a.probability)[0];
 }
 
-/** Limita los nombres comunes a 10 como máximo */
+
 function nombresComunesSeguros(arr?: string[]): string[] {
     return arr?.slice(0, 10) ?? [];
 }
@@ -42,11 +39,10 @@ export class IdentificacionRepositoryImpl implements IdentificacionRepository {
         rutaImagenLocal: string,
         apiJson: IdentifyResponse
     ): Promise<Identificacion> {
-        // 1) Extraer mejor sugerencia
+
         const mejor = mejorSugerencia(apiJson);
         if (!mejor) throw new Error('Respuesta de Plant.ID sin sugerencias');
 
-        // 2) Upsert de familia
         const nombreFamilia =
             mejor.plant_details?.taxonomy?.family ?? 'Desconocida';
         const familia = await prisma.familia.upsert({
@@ -55,7 +51,6 @@ export class IdentificacionRepositoryImpl implements IdentificacionRepository {
             create: { nombre: nombreFamilia, descripcion: nombreFamilia },
         });
 
-        // 3) Upsert de taxonomía
         const t = mejor.plant_details?.taxonomy ?? {};
         const taxonomia = await prisma.taxonomia.upsert({
             where: {
@@ -78,7 +73,6 @@ export class IdentificacionRepositoryImpl implements IdentificacionRepository {
             },
         });
 
-        // 4) Crea o busca planta
         const nombreCientifico = mejor.plant_name;
         let planta = await prisma.planta.findFirst({
             where: { nombreCientifico },
@@ -99,7 +93,6 @@ export class IdentificacionRepositoryImpl implements IdentificacionRepository {
             });
         }
 
-        // 5) Mueve la imagen al directorio público
         const dirDestino = path.join(
             process.cwd(),
             'public',
@@ -113,7 +106,6 @@ export class IdentificacionRepositoryImpl implements IdentificacionRepository {
         const rutaDestino = path.join(dirDestino, nombreArchivo);
         await fs.rename(rutaImagenLocal, rutaDestino);
 
-        // 6) Guarda la URL en ImagenPlanta
         await prisma.imagenPlanta.create({
             data: {
                 plantaId: planta.id,
@@ -124,14 +116,14 @@ export class IdentificacionRepositoryImpl implements IdentificacionRepository {
             },
         });
 
-        // 7) Crea la Identificación en BD, guardando también el access_token
+
         const identificacion = await prisma.identificacion.create({
             data: {
                 plantaId: planta.id,
                 imagenBase64: rutaDestino,
                 respuestaApi: apiJson as unknown as object,
                 confianza: mejor.probability,
-                secret: apiJson.access_token,   // <-- aquí guardamos el token para el chat
+                secret: apiJson.access_token,
             },
         });
 
@@ -141,7 +133,6 @@ export class IdentificacionRepositoryImpl implements IdentificacionRepository {
             confianza: mejor.probability,
         });
 
-        // 8) Devolver la entidad de dominio
         return Identificacion.fromPrisma(
             identificacion,
             planta,

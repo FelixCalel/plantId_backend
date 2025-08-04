@@ -1,5 +1,3 @@
-// src/infrastructure/external/plantid-api.service.ts
-
 import axios, { AxiosInstance, AxiosError } from 'axios';
 import fs from 'fs/promises';
 import path from 'path';
@@ -119,7 +117,6 @@ export class PlantIdApiService {
         : Promise<ChatbotConversationResponse> {
         try {
             const payload = { question };
-            // y aquí el endpoint v3, que usa identification/{id}/access_token/{token}/conversation
             const url = `/v3/identification/${accessToken}/conversation`;
             const { data } = await this.http.post<ChatbotConversationResponse>(url, payload);
             return data;
