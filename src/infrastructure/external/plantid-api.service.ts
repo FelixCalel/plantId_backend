@@ -92,18 +92,14 @@ export class PlantIdApiService {
                 plant_language: 'es',
                 plant_details: ['common_names', 'url', 'wiki_description', 'taxonomy'],
             };
-
             const { data } = await this.http.post<IdentifyResponse>(
-                '/identify',
+                '/v2/identify',
                 payload
             );
 
             if ((data as any).error) {
-                throw CustomError.badRequest(
-                    `PlantId API error: ${(data as any).error}`
-                );
+                throw CustomError.badRequest(`PlantId API error: ${(data as any).error}`);
             }
-
             return data;
         } catch (err) {
             return this.handleAxiosError(err);
@@ -112,24 +108,20 @@ export class PlantIdApiService {
 
     async getUsage(): Promise<UsageResponse> {
         try {
-            const { data } = await this.http.get<UsageResponse>('/usage');
+            const { data } = await this.http.get<UsageResponse>('/v2/usage');
             return data;
         } catch (err) {
             return this.handleAxiosError(err);
         }
     }
 
-    async askChatbot(
-        accessToken: string,
-        question: string
-    ): Promise<ChatbotConversationResponse> {
+    async askChatbot(accessToken: string, question: string)
+        : Promise<ChatbotConversationResponse> {
         try {
             const payload = { question };
-            const url = `/identification/${accessToken}/conversation`;
-            const { data } = await this.http.post<ChatbotConversationResponse>(
-                url,
-                payload
-            );
+            // y aquí el endpoint v3, que usa identification/{id}/access_token/{token}/conversation
+            const url = `/v3/identification/${accessToken}/conversation`;
+            const { data } = await this.http.post<ChatbotConversationResponse>(url, payload);
             return data;
         } catch (err) {
             return this.handleAxiosError(err);
