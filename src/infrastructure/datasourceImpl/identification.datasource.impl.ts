@@ -4,16 +4,21 @@ import { Identificacion } from '../../domain/entities/identification.entity';
 
 export class IdentificacionDataSourceImpl implements IdentificacionDatasource {
 
-
     async create(data: {
         plantaId: number;
         imagenBase64: string;
         respuestaApi: object;
         confianza: number;
+        secret: string;
     }): Promise<Identificacion> {
-
         const ident = await prisma.identificacion.create({
-            data,
+            data: {
+                plantaId: data.plantaId,
+                imagenBase64: data.imagenBase64,
+                respuestaApi: data.respuestaApi,
+                confianza: data.confianza,
+                secret: data.secret,
+            },
             include: {
                 planta: { include: { imagenes: true, taxonomia: true, familia: true } },
             },
@@ -26,6 +31,7 @@ export class IdentificacionDataSourceImpl implements IdentificacionDatasource {
             ident.planta!.familia!,
         );
     }
+
 
     async findById(id: number): Promise<Identificacion | null> {
         const ident = await prisma.identificacion.findUnique({

@@ -25,21 +25,30 @@ export class ChatService {
             role: 'USUARIO',
             content: dto.content,
         });
-
         const convo = await this.repo.getConversation(dto.conversacionId);
         if (!convo) {
-            throw CustomError.notFound(
-                `Conversación ${dto.conversacionId} no encontrada`
-            );
+            throw CustomError.notFound(`Conversación ${dto.conversacionId} no encontrada`);
         }
+
         const accessToken = convo.secret!;
         if (!accessToken) {
             throw CustomError.badRequest('Falta el access token de la conversación');
         }
 
+        const isFirstTurn = (convo.messages?.length ?? 0) <= 1;
+
         let chatResp: ChatbotConversationResponse;
         try {
-            chatResp = await this.plantApi.askChatbot(accessToken, dto.content);
+            chatResp = await this.plantApi.askChatbot(
+                accessToken,
+                dto.content,
+                isFirstTurn
+                    ? {
+                        prompt: "Eres un asistente experto en plantas, habla en español y sé breve",
+                        temperature: 0.5,
+                    }
+                    : undefined
+            );
         } catch (err) {
             throw err;
         }

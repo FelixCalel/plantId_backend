@@ -113,16 +113,25 @@ export class PlantIdApiService {
         }
     }
 
-    async askChatbot(accessToken: string, question: string)
-        : Promise<ChatbotConversationResponse> {
-        try {
-            const payload = { question };
-            const url = `/v3/identification/${accessToken}/conversation`;
-            const { data } = await this.http.post<ChatbotConversationResponse>(url, payload);
-            return data;
-        } catch (err) {
-            return this.handleAxiosError(err);
+    async askChatbot(
+        accessToken: string,
+        question: string,
+        options?: { prompt?: string; temperature?: number }
+    ): Promise<ChatbotConversationResponse> {
+        const payload: Record<string, unknown> = { question };
+        if (options?.prompt) {
+            payload.prompt = options.prompt;
         }
+        if (options?.temperature !== undefined) {
+            payload.temperature = options.temperature;
+        }
+
+        const url = `/v3/identification/${accessToken}/conversation`;
+        const { data } = await this.http.post<ChatbotConversationResponse>(
+            url,
+            payload
+        );
+        return data;
     }
 
     private handleAxiosError<T>(err: unknown): never {

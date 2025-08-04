@@ -17,6 +17,7 @@ export class Identificacion {
         public readonly planta: Planta,
         public readonly taxonomia: Taxonomia,
         public readonly familia: Familia,
+        public readonly secret?: string,
     ) { }
 
     static fromPrisma(
@@ -34,6 +35,7 @@ export class Identificacion {
             planta,
             taxonomia,
             familia,
+            row.secret ?? undefined,
         );
     }
 }

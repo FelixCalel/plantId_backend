@@ -21,7 +21,7 @@ export class ChatDatasourceImpl implements ChatRepository {
         const m = await prisma.mensajeChat.create({
             data: {
                 conversacionId: dto.conversacionId,
-                rol: 'USUARIO',
+                rol: dto.role,
                 contenido: dto.content,
             }
         });

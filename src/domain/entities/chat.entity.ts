@@ -1,5 +1,3 @@
-// src/domain/entities/chat.entity.ts
-
 import { MensajeChat, ConversacionChat } from '@prisma/client';
 
 export class ChatMessage {
