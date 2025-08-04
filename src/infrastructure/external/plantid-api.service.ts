@@ -105,7 +105,6 @@ export class PlantIdApiService {
     }
     async getUsage(): Promise<UsageResponse> {
         try {
-            // construimos manual la URL correcta
             const url = 'https://plant.id/api/v3/usage_info';
             const { data } = await axios.get<UsageResponse>(url, {
                 headers: {
