@@ -103,10 +103,16 @@ export class PlantIdApiService {
             return this.handleAxiosError(err);
         }
     }
-
     async getUsage(): Promise<UsageResponse> {
         try {
-            const { data } = await this.http.get<UsageResponse>('/v2/usage');
+            // construimos manual la URL correcta
+            const url = 'https://plant.id/api/v3/usage_info';
+            const { data } = await axios.get<UsageResponse>(url, {
+                headers: {
+                    'Api-Key': this.apiKey,
+                    'Content-Type': 'application/json',
+                },
+            });
             return data;
         } catch (err) {
             return this.handleAxiosError(err);
