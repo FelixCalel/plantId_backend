@@ -1,3 +1,5 @@
+// src/infrastructure/external/plantid-api.service.ts
+
 import axios, { AxiosInstance, AxiosError } from 'axios';
 import fs from 'fs/promises';
 import path from 'path';
@@ -15,18 +17,26 @@ export interface PlantIdSuggestion {
         url?: string;
         wiki_description?: { value: string };
         taxonomy?: {
-            kingdom?: string; phylum?: string; class?: string; order?: string;
-            family?: string; genus?: string; species?: string; rank?: string;
+            kingdom?: string;
+            phylum?: string;
+            class?: string;
+            order?: string;
+            family?: string;
+            genus?: string;
+            species?: string;
+            rank?: string;
         };
     };
 }
 
 export interface IdentifyResponse {
     id: string;
-    suggestions: PlantIdSuggestion[];
-    is_plant: boolean;
+    access_token: string;
+    result: {
+        is_plant: { binary: boolean; probability: number };
+        classification: { suggestions: PlantIdSuggestion[] };
+    };
     meta_data?: { latitude?: number; longitude?: number };
-    error?: string;
 }
 
 export interface UsageResponse {
@@ -37,16 +47,33 @@ export interface UsageResponse {
     credits_limit: number;
 }
 
+export interface ChatbotMessage {
+    content: string;
+    type: 'question' | 'answer';
+    created: string;
+}
+
+export interface ChatbotConversationResponse {
+    messages: ChatbotMessage[];
+    identification: string;
+    remaining_calls: number;
+    model_parameters: {
+        model: string;
+        temperature: number;
+    };
+    feedback: Record<string, unknown>;
+}
+
 export class PlantIdApiService {
     private readonly http: AxiosInstance;
 
     constructor(
         private readonly apiKey = envs.PLANTID_API_KEY,
-        private readonly baseUrl = envs.PLANTID_BASE_URL,
+        private readonly baseUrl = envs.PLANTID_BASE_URL
     ) {
         this.http = axios.create({
             baseURL: this.baseUrl.replace(/\/+$/, ''),
-            timeout: 30000,
+            timeout: 30_000,
             headers: {
                 'Api-Key': this.apiKey,
                 'Content-Type': 'application/json',
@@ -56,18 +83,25 @@ export class PlantIdApiService {
 
     async identify(localImagePath: string): Promise<IdentifyResponse> {
         try {
-            const bytes = await fs.readFile(path.resolve(localImagePath));
-            const base64Img = bytes.toString('base64');
+            const abs = path.resolve(localImagePath);
+            const bytes = await fs.readFile(abs);
+            const b64 = bytes.toString('base64');
             const payload = {
-                images: [base64Img],
+                images: [b64],
                 modifiers: ['crops_fast', 'similar_images'],
                 plant_language: 'es',
                 plant_details: ['common_names', 'url', 'wiki_description', 'taxonomy'],
             };
-            const { data } = await this.http.post<IdentifyResponse>('/identify', payload);
 
-            if (data.error) {
-                throw CustomError.badRequest(`PlantId API error: ${data.error}`);
+            const { data } = await this.http.post<IdentifyResponse>(
+                '/identify',
+                payload
+            );
+
+            if ((data as any).error) {
+                throw CustomError.badRequest(
+                    `PlantId API error: ${(data as any).error}`
+                );
             }
 
             return data;
@@ -85,17 +119,32 @@ export class PlantIdApiService {
         }
     }
 
+    async askChatbot(
+        accessToken: string,
+        question: string
+    ): Promise<ChatbotConversationResponse> {
+        try {
+            const payload = { question };
+            const url = `/identification/${accessToken}/conversation`;
+            const { data } = await this.http.post<ChatbotConversationResponse>(
+                url,
+                payload
+            );
+            return data;
+        } catch (err) {
+            return this.handleAxiosError(err);
+        }
+    }
+
     private handleAxiosError<T>(err: unknown): never {
         if (axios.isAxiosError(err)) {
             const ax = err as AxiosError<any>;
-
-            console.error('Plant.id v2 error payload ➜', ax.response?.data);
+            console.error('Plant.ID error payload ➜', ax.response?.data);
 
             const msg =
                 ax.response?.data?.error ??
                 ax.response?.statusText ??
                 ax.message;
-
             const status = ax.response?.status ?? 500;
             logger.error('PlantId API %s → %s', status, msg);
 
@@ -103,6 +152,10 @@ export class PlantIdApiService {
         }
 
         logger.error('Unexpected error calling PlantId API: %s', err);
-        throw CustomError.internal('Error interno comunicando con PlantId', undefined, err);
+        throw CustomError.internal(
+            'Error interno comunicando con PlantId',
+            undefined,
+            err
+        );
     }
 }

@@ -78,15 +78,20 @@ model Identificacion {
   imagenBase64 String
   respuestaApi Json
   confianza    Float?
+  secret       String?
   creadaEn     DateTime @default(now())
   planta       Planta?  @relation(fields: [plantaId], references: [id])
 }
 
 model ConversacionChat {
   id             Int           @id @default(autoincrement())
+  identificacion String?
+  secret         String?
+  creditosUsados Int           @default(0)
   creadaEn       DateTime      @default(now())
   mensajes       MensajeChat[]
-  creditosUsados Int           @default(0)
+
+  @@map("ConversacionChat")
 }
 
 model MensajeChat {
