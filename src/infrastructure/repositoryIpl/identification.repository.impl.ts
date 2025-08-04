@@ -35,16 +35,18 @@ function nombresComunesSeguros(arr?: string[]): string[] {
 }
 
 export class IdentificacionRepositoryImpl implements IdentificacionRepository {
-    async createFromApi(
-        rutaImagenLocal: string,
-        apiJson: IdentifyResponse
-    ): Promise<Identificacion> {
+    async createFromApi(data: {
+        imagenBase64: string;
+        respuestaApi: IdentifyResponse;
+        confianza: number;
+        secret: string;
+    }): Promise<Identificacion> {
+        const { imagenBase64: tmpPath, respuestaApi: apiJson, confianza, secret } = data;
 
         const mejor = mejorSugerencia(apiJson);
         if (!mejor) throw new Error('Respuesta de Plant.ID sin sugerencias');
 
-        const nombreFamilia =
-            mejor.plant_details?.taxonomy?.family ?? 'Desconocida';
+        const nombreFamilia = mejor.plant_details?.taxonomy?.family ?? 'Desconocida';
         const familia = await prisma.familia.upsert({
             where: { nombre: nombreFamilia },
             update: {},
@@ -82,9 +84,7 @@ export class IdentificacionRepositoryImpl implements IdentificacionRepository {
             planta = await prisma.planta.create({
                 data: {
                     nombreCientifico,
-                    nombresComunes: nombresComunesSeguros(
-                        mejor.plant_details?.common_names
-                    ),
+                    nombresComunes: nombresComunesSeguros(mejor.plant_details?.common_names),
                     estado: EstadoPlanta.ACTIVA,
                     taxonomiaId: taxonomia.id,
                     familiaId: familia.id,
@@ -93,44 +93,34 @@ export class IdentificacionRepositoryImpl implements IdentificacionRepository {
             });
         }
 
-        const dirDestino = path.join(
-            process.cwd(),
-            'public',
-            'imagenes',
-            `${planta.id}`
-        );
+        const dirDestino = path.join(process.cwd(), 'public', 'imagenes', `${planta.id}`);
         await fs.mkdir(dirDestino, { recursive: true });
-        const nombreArchivo = `original_${Date.now()}${path.extname(
-            rutaImagenLocal
-        )}`;
+        const nombreArchivo = `original_${Date.now()}${path.extname(tmpPath)}`;
         const rutaDestino = path.join(dirDestino, nombreArchivo);
-        await fs.rename(rutaImagenLocal, rutaDestino);
+        await fs.rename(tmpPath, rutaDestino);
 
         await prisma.imagenPlanta.create({
             data: {
                 plantaId: planta.id,
-                url: path
-                    .relative(path.join(process.cwd(), 'public'), rutaDestino)
-                    .replace(/\\/g, '/'),
+                url: path.relative(path.join(process.cwd(), 'public'), rutaDestino).replace(/\\/g, '/'),
                 miniatura: false,
             },
         });
-
 
         const identificacion = await prisma.identificacion.create({
             data: {
                 plantaId: planta.id,
                 imagenBase64: rutaDestino,
                 respuestaApi: apiJson as unknown as object,
-                confianza: mejor.probability,
-                secret: apiJson.access_token,
+                confianza: confianza,
+                secret: secret,
             },
         });
 
         logger.info('Identificación creada: %o', {
             id: identificacion.id,
             planta: planta.nombreCientifico,
-            confianza: mejor.probability,
+            confianza: confianza,
         });
 
         return Identificacion.fromPrisma(

@@ -123,18 +123,17 @@ export class PlantIdApiService {
         question: string,
         options?: { prompt?: string; temperature?: number }
     ): Promise<ChatbotConversationResponse> {
-        const payload: Record<string, unknown> = { question };
-        if (options?.prompt) {
-            payload.prompt = options.prompt;
-        }
-        if (options?.temperature !== undefined) {
-            payload.temperature = options.temperature;
-        }
-
-        const url = `/v3/identification/${accessToken}/conversation`;
+        const payload: any = { question, ...options };
         const { data } = await this.http.post<ChatbotConversationResponse>(
-            url,
+            `/v3/identification/${accessToken}/conversation`,
             payload
+        );
+        return data;
+    }
+
+    async getChatbotConversation(accessToken: string): Promise<ChatbotConversationResponse> {
+        const { data } = await this.http.get<ChatbotConversationResponse>(
+            `/v3/identification/${accessToken}/conversation`
         );
         return data;
     }

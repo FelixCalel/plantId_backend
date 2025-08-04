@@ -9,6 +9,7 @@ export class ChatService {
         private readonly repo: ChatRepository,
         private readonly plantApi: PlantIdApiService
     ) { }
+
     async startConversation(
         identificationId: string,
         secret: string
@@ -16,58 +17,43 @@ export class ChatService {
         return this.repo.createConversation(identificationId, secret);
     }
 
-    async sendMessage(dto: CreateMessageDto): Promise<{
-        userMessage: ChatMessage;
-        botMessage: ChatMessage;
-    }> {
-        const userMessage = await this.repo.addMessage({
+
+    async sendMessage(dto: CreateMessageDto): Promise<ChatConversation> {
+        await this.repo.addMessage({
             conversacionId: dto.conversacionId,
             role: 'USUARIO',
             content: dto.content,
         });
-        const convo = await this.repo.getConversation(dto.conversacionId);
-        if (!convo) {
-            throw CustomError.notFound(`Conversación ${dto.conversacionId} no encontrada`);
-        }
 
-        const accessToken = convo.secret!;
-        if (!accessToken) {
-            throw CustomError.badRequest('Falta el access token de la conversación');
-        }
+        const before = await this.repo.getConversation(dto.conversacionId);
+        if (!before) throw CustomError.notFound(`Conversación ${dto.conversacionId} no encontrada`);
 
-        const isFirstTurn = (convo.messages?.length ?? 0) <= 1;
-
-        let chatResp: ChatbotConversationResponse;
-        try {
-            chatResp = await this.plantApi.askChatbot(
-                accessToken,
-                dto.content,
-                isFirstTurn
-                    ? {
-                        prompt: "Eres un asistente experto en plantas, habla en español y sé breve",
-                        temperature: 0.5,
-                    }
-                    : undefined
-            );
-        } catch (err) {
-            throw err;
-        }
-
-        const answer = chatResp.messages.find((m) => m.type === 'answer');
-        const botContent = answer?.content ?? '';
-
-        const botMessage = await this.repo.addMessage({
+        const chatResp = await this.plantApi.askChatbot(
+            before.secret!,
+            dto.content,
+            before.messages.length <= 1
+                ? { prompt: 'Eres un asistente experto en plantas, habla en español y sé breve', temperature: 0.5 }
+                : undefined
+        );
+        const answers = chatResp.messages.filter(m => m.type === 'answer');
+        if (!answers.length) throw CustomError.internal('El chatbot no devolvió respuesta');
+        const lastAnswer = answers[answers.length - 1];
+        await this.repo.addMessage({
             conversacionId: dto.conversacionId,
             role: 'BOT',
-            content: botContent,
+            content: lastAnswer.content,
         });
-
-        return { userMessage, botMessage };
+        const full = await this.repo.getConversation(dto.conversacionId);
+        if (!full) throw CustomError.notFound(`Conversación ${dto.conversacionId} no encontrada tras guardar mensajes`);
+        return full;
     }
+
 
     getConversation(id: number): Promise<ChatConversation | null> {
         return this.repo.getConversation(id);
     }
+
+
 
     getHistory(
         conversacionId: number,

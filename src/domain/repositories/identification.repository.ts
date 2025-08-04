@@ -3,14 +3,14 @@ import { Identificacion } from '../entities/identification.entity';
 
 export interface IdentificacionRepository {
 
-
-    createFromApi(
-        rutaImagenLocal: string,
-        apiJson: IdentifyResponse,
-    ): Promise<Identificacion>;
+    createFromApi(data: {
+        imagenBase64: string;
+        respuestaApi: IdentifyResponse;
+        confianza: number;
+        secret: string;
+    }): Promise<Identificacion>;
 
     getById(id: number): Promise<Identificacion | null>;
-
     paginate(
         page: number,
         limit: number,

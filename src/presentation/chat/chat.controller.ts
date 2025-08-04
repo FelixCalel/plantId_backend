@@ -26,8 +26,8 @@ export class ChatController {
         dto.conversacionId = Number(req.params.id);
         dto.content = String(req.body.content);
         try {
-            const { userMessage, botMessage } = await chatService.sendMessage(dto);
-            res.status(201).json({ userMessage, botMessage });
+            const conversation = await chatService.sendMessage(dto);
+            res.status(201).json(conversation);
         } catch (err) {
             res.status(500).json({ error: (err as Error).message });
         }

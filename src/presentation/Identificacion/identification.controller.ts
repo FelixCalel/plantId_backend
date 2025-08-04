@@ -13,26 +13,38 @@ export class IdentificacionController {
 
     identify = async (req: Request, res: Response) => {
         try {
-            if (!req.file)
+            if (!req.file) {
                 return res.status(400).json({ error: 'Se requiere un archivo "image"' });
+            }
 
             const tmpPath = req.file.path;
             const apiResponse = await this.plantIdApi.identify(tmpPath);
 
-            const identificacion = await this.identificationRepo.createFromApi(
-                tmpPath,
-                apiResponse,
-            );
+            const secret = apiResponse.access_token;
+            let confianza: number;
+            if (apiResponse.result?.is_plant?.probability != null) {
+                confianza = apiResponse.result.is_plant.probability;
+            } else if ((apiResponse as any).is_plant_probability != null) {
+                confianza = (apiResponse as any).is_plant_probability;
+            } else {
+                confianza = 0;
+            }
+
+            const identificacion = await this.identificationRepo.createFromApi({
+                imagenBase64: tmpPath,
+                respuestaApi: apiResponse,
+                confianza,
+                secret
+            });
 
             await fs.unlink(tmpPath).catch(() => { });
 
             return res.status(201).json(identificacion);
         } catch (error) {
             logger.error('Error en identify: %s', error);
-
-            if (error instanceof CustomError)
+            if (error instanceof CustomError) {
                 return res.status(error.statusCode).json({ error: error.message });
-
+            }
             return res.status(500).json({ error: 'Error interno del servidor' });
         }
     };
